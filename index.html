@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="IceBreaker">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>IceBreaker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --text: #f0ede8;
+    --text-dim: #8a8580;
+    --accent: #e8a045;
+    --accent-glow: rgba(232, 160, 69, 0.15);
+    --accent-soft: #c4813a;
+    --green: #6bcf8e;
+    --radius: 16px;
+    --safe-top: env(safe-area-inset-top, 20px);
+    --safe-bottom: env(safe-area-inset-bottom, 20px);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding: var(--safe-top) 20px var(--safe-bottom);
+  }
+
+  /* Header */
+  .header {
+    padding: 16px 0 24px;
+    text-align: center;
+  }
+  .header .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), #f0c87a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+  .header .tagline {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Section labels */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+
+  /* Scene grid */
+  .scene-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .scene-btn {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .scene-btn .icon { font-size: 22px; }
+  .scene-btn:active { transform: scale(0.95); }
+  .scene-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+    color: var(--accent);
+  }
+  .scene-btn.active::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at center, var(--accent-glow), transparent);
+    pointer-events: none;
+  }
+
+  /* Context chips */
+  .context-section { margin-bottom: 20px; }
+
+  .context-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .context-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .context-input::placeholder { color: var(--text-dim); }
+  .context-input:focus { border-color: var(--accent); }
+
+  .add-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 12px;
+    width: 46px;
+    min-width: 46px;
+    color: #0a0a0a;
+    font-size: 22px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .add-btn:active { transform: scale(0.9); opacity: 0.8; }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 10px;
+  }
+  .chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 7px 14px;
+    font-size: 13px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: chipIn 0.25s ease;
+  }
+  .chip .remove {
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .chip .remove:hover { color: var(--accent); }
+
+  @keyframes chipIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* Vibe selector */
+  .vibe-section { margin-bottom: 20px; }
+  .vibe-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+  .vibe-row::-webkit-scrollbar { display: none; }
+  .vibe-btn {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 8px 16px;
+    color: var(--text-dim);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .vibe-btn:active { transform: scale(0.95); }
+  .vibe-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  /* Generate Button */
+  .generate-btn {
+    width: 100%;
+    padding: 18px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+    border: none;
+    border-radius: 16px;
+    color: #0a0a0a;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .generate-btn:active { transform: scale(0.97); }
+  .generate-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .generate-btn .shimmer {
+    position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: shimmer 2s infinite;
+  }
+  @keyframes shimmer { to { left: 100%; } }
+
+  /* Results */
+  .results {
+    flex: 1;
+    padding-bottom: 20px;
+  }
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    position: relative;
+    animation: cardIn 0.35s ease both;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .question-card:active { transform: scale(0.98); background: var(--surface2); }
+  .question-card .num {
+    background: var(--accent-glow);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 12px;
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .question-card .text {
+    font-size: 15px;
+    line-height: 1.5;
+    flex: 1;
+  }
+  .question-card .copied-toast {
+    position: absolute;
+    top: 50%; right: 16px;
+    transform: translateY(-50%);
+    background: var(--green);
+    color: #0a0a0a;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    animation: toastPop 0.3s ease;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes toastPop {
+    from { opacity: 0; transform: translateY(-50%) scale(0.8); }
+    to { opacity: 1; transform: translateY(-50%) scale(1); }
+  }
+
+  .question-card:nth-child(2) { animation-delay: 0.07s; }
+  .question-card:nth-child(3) { animation-delay: 0.14s; }
+  .question-card:nth-child(4) { animation-delay: 0.21s; }
+  .question-card:nth-child(5) { animation-delay: 0.28s; }
+
+  /* Loading */
+  .loading { text-align: center; padding: 40px 0; }
+  .loading .dots { display: inline-flex; gap: 6px; }
+  .loading .dot {
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: bounce 1.2s ease infinite;
+  }
+  .loading .dot:nth-child(2) { animation-delay: 0.15s; }
+  .loading .dot:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+  .loading .loading-text {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-dim);
+  }
+  .empty-state .big-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.6; }
+  .empty-state p { font-size: 14px; line-height: 1.6; }
+
+  /* Tip bar */
+  .tip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .tip .tip-icon { font-size: 16px; }
+
+  /* Refresh btn */
+  .refresh-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px;
+    color: var(--text-dim);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+  }
+  .refresh-btn:active { transform: scale(0.95); color: var(--accent); }
+
+  /* Follow-up section */
+  .followup-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .followup-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--surface);
+    border: 1.5px dashed var(--border);
+    border-radius: 14px;
+    color: var(--text-dim);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .followup-btn:active { transform: scale(0.97); border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="header">
+    <div class="logo">IceBreaker</div>
+    <div class="tagline">Your pocket wingman</div>
+  </div>
+
+  <!-- Scene -->
+  <div class="section-label">Where are you?</div>
+  <div class="scene-grid" id="sceneGrid">
+    <button class="scene-btn" data-scene="gym" onclick="selectScene(this)">
+      <span class="icon">🏋️</span>Gym
+    </button>
+    <button class="scene-btn" data-scene="festival" onclick="selectScene(this)">
+      <span class="icon">🎶</span>Festival
+    </button>
+    <button class="scene-btn" data-scene="street" onclick="selectScene(this)">
+      <span class="icon">🚶</span>Street
+    </button>
+    <button class="scene-btn" data-scene="bar" onclick="selectScene(this)">
+      <span class="icon">🍸</span>Bar / Club
+    </button>
+    <button class="scene-btn" data-scene="cafe" onclick="selectScene(this)">
+      <span class="icon">☕</span>Café
+    </button>
+    <button class="scene-btn" data-scene="park" onclick="selectScene(this)">
+      <span class="icon">🌳</span>Park
+    </button>
+    <button class="scene-btn" data-scene="store" onclick="selectScene(this)">
+      <span class="icon">🛒</span>Store
+    </button>
+    <button class="scene-btn" data-scene="event" onclick="selectScene(this)">
+      <span class="icon">🎪</span>Event
+    </button>
+    <button class="scene-btn" data-scene="other" onclick="selectScene(this)">
+      <span class="icon">📍</span>Other
+    </button>
+  </div>
+
+  <!-- Quick context -->
+  <div class="context-section">
+    <div class="section-label">What do you notice? <span style="color:#555">(optional)</span></div>
+    <div class="context-input-row">
+      <input class="context-input" id="contextInput" type="text" placeholder="e.g. cool tattoo, reading a book..." 
+        onkeydown="if(event.key==='Enter'){addChip()}" maxlength="80">
+      <button class="add-btn" onclick="addChip()">+</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <!-- Vibe -->
+  <div class="vibe-section">
+    <div class="section-label">Your vibe</div>
+    <div class="vibe-row" id="vibeRow">
+      <button class="vibe-btn active" data-vibe="friendly" onclick="selectVibe(this)">😊 Friendly</button>
+      <button class="vibe-btn" data-vibe="funny" onclick="selectVibe(this)">😄 Funny</button>
+      <button class="vibe-btn" data-vibe="flirty" onclick="selectVibe(this)">😏 Flirty</button>
+      <button class="vibe-btn" data-vibe="chill" onclick="selectVibe(this)">🤙 Chill</button>
+      <button class="vibe-btn" data-vibe="bold" onclick="selectVibe(this)">🔥 Bold</button>
+    </div>
+  </div>
+
+  <!-- Generate -->
+  <button class="generate-btn" id="generateBtn" onclick="generate()" disabled>
+    <span class="shimmer" id="shimmer" style="display:none"></span>
+    <span id="btnText">Pick a scene first</span>
+  </button>
+
+  <!-- Results area -->
+  <div class="results" id="results">
+    <div class="empty-state">
+      <div class="big-icon">💬</div>
+      <p>Pick where you are, add what you notice, and hit generate.<br><br>You'll get natural openers in seconds.</p>
+    </div>
+  </div>
+
+  <div class="tip">
+    <span class="tip-icon">💡</span>
+    Tap any question to copy it. You've got this.
+  </div>
+</div>
+
+<script>
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
+  let selectedScene = null;
+  let selectedVibe = 'friendly';
+  let chips = [];
+  let lastQuestions = [];
+
+  function selectScene(btn) {
+    document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedScene = btn.dataset.scene;
+    document.getElementById('generateBtn').disabled = false;
+    document.getElementById('btnText').textContent = '⚡ Generate openers';
+    if (navigator.vibrate) navigator.vibrate(15);
+  }
+
+  function selectVibe(btn) {
+    document.querySelectorAll('.vibe-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedVibe = btn.dataset.vibe;
+    if (navigator.vibrate) navigator.vibrate(10);
+  }
+
+  function addChip() {
+    const input = document.getElementById('contextInput');
+    const val = input.value.trim();
+    if (!val || chips.length >= 5) return;
+    chips.push(val);
+    input.value = '';
+    renderChips();
+    if (navigator.vibrate) navigator.vibrate(10);
+  }
+
+  function removeChip(idx) {
+    chips.splice(idx, 1);
+    renderChips();
+  }
+
+  function renderChips() {
+    document.getElementById('chips').innerHTML = chips.map((c, i) => 
+      `<div class="chip"><span>${esc(c)}</span><span class="remove" onclick="removeChip(${i})">✕</span></div>`
+    ).join('');
+  }
+
+  function esc(t) {
+    const d = document.createElement('div');
+    d.textContent = t;
+    return d.innerHTML;
+  }
+
+  async function generate() {
+    if (!selectedScene) return;
+
+    const btn = document.getElementById('generateBtn');
+    const results = document.getElementById('results');
+
+    btn.disabled = true;
+    document.getElementById('shimmer').style.display = 'block';
+    document.getElementById('btnText').textContent = 'Thinking...';
+
+    results.innerHTML = `
+      <div class="loading">
+        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="loading-text">Cooking up openers...</div>
+      </div>`;
+
+    const scenes = {
+      gym: 'at the gym', festival: 'at a music festival', street: 'on the street',
+      bar: 'at a bar or club', cafe: 'at a café', park: 'in a park',
+      store: 'at a store', event: 'at a social event', other: 'out in public'
+    };
+
+    const vibes = {
+      friendly: 'warm and friendly — like asking a neighbor',
+      funny: 'lighthearted and humorous — make her smile or laugh',
+      flirty: 'subtly flirty but respectful — confident, not sleazy',
+      chill: 'super casual and laid-back — zero pressure',
+      bold: 'confident and direct — clearly showing interest'
+    };
+
+    const ctx = chips.length > 0 ? `\nSpecific things I noticed: ${chips.join(', ')}` : '';
+
+    const prompt = `I'm ${scenes[selectedScene]} and want to start a conversation with a woman I find attractive.${ctx}
+
+Vibe I'm going for: ${vibes[selectedVibe]}
+
+Give me exactly 5 natural, open-ended conversation starters or questions. Rules:
+- Feel natural, never creepy or try-hard
+- Appropriate for the setting
+- Open-ended so the conversation keeps flowing
+- Match the vibe I specified
+- If I gave context details, weave them in creatively
+- Range from easiest first to slightly bolder last
+- These should work as genuine ice breakers for the first 30 seconds — after that I can keep the convo going myself
+
+Return ONLY a JSON array of 5 strings. No markdown, no explanation. Example format: ["opener 1", "opener 2", ...]`;
+
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+
+      const data = await res.json();
+      const text = data.content.map(i => i.text || "").join("");
+      const clean = text.replace(/```json|```/g, "").trim();
+      lastQuestions = JSON.parse(clean);
+      renderResults(lastQuestions);
+    } catch (err) {
+      console.error(err);
+      results.innerHTML = `
+        <div class="empty-state">
+          <div class="big-icon">😅</div>
+          <p>Something went wrong.<br>Check your connection and try again.</p>
+        </div>`;
+    }
+
+    btn.disabled = false;
+    document.getElementById('shimmer').style.display = 'none';
+    document.getElementById('btnText').textContent = '⚡ Generate openers';
+  }
+
+  function renderResults(questions) {
+    const results = document.getElementById('results');
+    results.innerHTML = `
+      <div class="results-header">
+        <div class="section-label" style="margin:0">Your openers</div>
+        <button class="refresh-btn" onclick="generate()">↻ New ones</button>
+      </div>
+      ${questions.map((q, i) => `
+        <div class="question-card" onclick="copyQ(this, ${i})">
+          <div class="num">${i + 1}</div>
+          <div class="text">${esc(q)}</div>
+        </div>
+      `).join('')}
+      <div class="followup-section">
+        <button class="followup-btn" onclick="getFollowUps()">
+          💬 She responded — give me follow-up questions
+        </button>
+      </div>
+    `;
+  }
+
+  function copyQ(card, idx) {
+    navigator.clipboard.writeText(lastQuestions[idx]).catch(() => {});
+    if (!card.querySelector('.copied-toast')) {
+      const t = document.createElement('div');
+      t.className = 'copied-toast';
+      t.textContent = 'Copied!';
+      card.appendChild(t);
+      if (navigator.vibrate) navigator.vibrate(10);
+      setTimeout(() => t.remove(), 1200);
+    }
+  }
+
+  async function getFollowUps() {
+    const btn = document.getElementById('generateBtn');
+    const results = document.getElementById('results');
+
+    results.innerHTML = `
+      <div class="loading">
+        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="loading-text">Getting follow-ups...</div>
+      </div>`;
+
+    const scenes = {
+      gym: 'at the gym', festival: 'at a music festival', street: 'on the street',
+      bar: 'at a bar or club', cafe: 'at a café', park: 'in a park',
+      store: 'at a store', event: 'at a social event', other: 'out in public'
+    };
+
+    const prompt = `I'm ${scenes[selectedScene]} and I just started talking to a woman using one of these openers:
+${lastQuestions.map((q,i) => `${i+1}. "${q}"`).join('\n')}
+
+She responded positively and we're chatting. Give me 5 natural follow-up questions to keep the conversation going and deepen the connection. These should:
+- Feel like a natural next step, not a random topic change
+- Show genuine curiosity about her
+- Be open-ended
+- Help me learn more about her personality, interests, or plans
+
+Return ONLY a JSON array of 5 strings. No markdown, no explanation.`;
+
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+
+      const data = await res.json();
+      const text = data.content.map(i => i.text || "").join("");
+      const clean = text.replace(/```json|```/g, "").trim();
+      lastQuestions = JSON.parse(clean);
+
+      results.innerHTML = `
+        <div class="results-header">
+          <div class="section-label" style="margin:0">Keep it going</div>
+          <button class="refresh-btn" onclick="getFollowUps()">↻ More</button>
+        </div>
+        ${lastQuestions.map((q, i) => `
+          <div class="question-card" onclick="copyQ(this, ${i})">
+            <div class="num">${i + 1}</div>
+            <div class="text">${esc(q)}</div>
+          </div>
+        `).join('')}
+      `;
+    } catch (err) {
+      results.innerHTML = `
+        <div class="empty-state">
+          <div class="big-icon">😅</div>
+          <p>Something went wrong. Try again.</p>
+        </div>`;
+    }
+  }
+</script>
+</body>
+</html>
